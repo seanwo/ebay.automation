@@ -7,15 +7,17 @@ CONFIG = {
         'DEV_ID': 'YOUR_DEV_ID',
         'APP_ID': 'YOUR_APP_ID',
         'CERT_ID': 'YOUR__CERT_ID',
-        'USER_TOKEN': 'YOUR_USER_TOKEN',
         'EBAY_API_DOMAIN': 'api.sandbox.ebay.com',
+        'USER_TOKEN': 'YOUR_USER_TOKEN',
+        'OAUTH_TOKEN': "YOUR_OAUTH_TOKEN",
     },
     'production': {
         'DEV_ID': 'YOUR_DEV_ID',
         'APP_ID': 'YOUR_APP_ID',
         'CERT_ID': 'YOUR__CERT_ID',
-        'USER_TOKEN': 'YOUR_USER_TOKEN',
         'EBAY_API_DOMAIN': 'api.ebay.com',
+        'USER_TOKEN': 'YOUR_USER_TOKEN',
+        'OAUTH_TOKEN': "YOUR_OAUTH_TOKEN",
     }
 }
 
