@@ -1,0 +1,6 @@
+.DS_Store
+ebay_config.py
+__pycache__/*
+photos/*
+!photos/000/
+!photos/000/**
