@@ -1,5 +1,10 @@
 .DS_Store
 ebay_config.py
+*.xlsx
+*.urls.csv
+*.urls.txt
+*.html
+!template.diecast.html
 __pycache__/*
 photos/*
 !photos/000/
