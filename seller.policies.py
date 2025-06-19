@@ -1,7 +1,9 @@
 import sys
 import os
 import requests
-from ebay_config import ENV, OAUTH_TOKEN
+from ebay_config import ENV, get_oauth_token_from_refresh_token
+
+OAUTH_TOKEN = get_oauth_token_from_refresh_token(['https://api.ebay.com/oauth/api_scope/sell.account'])
 
 BASE_URL = "https://api.sandbox.ebay.com" if ENV == "sandbox" else "https://api.ebay.com"
 HEADERS = {
