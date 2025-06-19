@@ -136,15 +136,13 @@ def score_nascar_diecast(row):
         price = 24.99
 
     return pd.Series({
-        "product_id": product_id,
-        "description": description,
-        "rarity": rarity,
-        "build": build,
-        "autograph": autograph,
-        "relevance": driver_relevance,
-        "special": special_features,
-        "authenticity": authenticity,
-        "packaging": packaging,
+        "w.rarity": rarity,
+        "w.build": build,
+        "w.autograph": autograph,
+        "w.relevance": driver_relevance,
+        "w.special": special_features,
+        "w.authenticity": authenticity,
+        "w.packaging": packaging,
         "reduce": issue,
         "score": round(score, 2),
         "price": price
@@ -160,8 +158,8 @@ def main():
     output_spreadsheet = sys.argv[2]
 
     df = pd.read_excel(input_spreadsheet, dtype={"id": str})
-    # scored_df = df.join(df.apply(score_nascar_diecast, axis=1))
-    scored_df = df.apply(score_nascar_diecast, axis=1)
+    scored_df = df.join(df.apply(score_nascar_diecast, axis=1))
+    # scored_df = df.apply(score_nascar_diecast, axis=1)
     scored_df.to_excel(output_spreadsheet, index=False)
     print(f"Pricing data saved to: {output_spreadsheet}")
 
