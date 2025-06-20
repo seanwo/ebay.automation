@@ -104,6 +104,5 @@ python3 manage.py status <product_id>
 ## 🔧 Notes
 
 - All `sku` values are prefixed as `DIECAST-<product_id>`
-- Listings ended via Trading API will retain their listing ID but show as `status: UNPUBLISHED` in the Sell API
 - Deletion is blocked if the listing is still active; always end it first
 - All commands support both sandbox and production environments via `ebay_config.py`
