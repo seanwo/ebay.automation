@@ -5,16 +5,30 @@ import json
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
+from datetime import datetime
 from ebay_config import ENV, SHIPPING_ADDRESS, get_oauth_token_from_refresh_token
 
-OAUTH_TOKEN = get_oauth_token_from_refresh_token(['https://api.ebay.com/oauth/api_scope/sell.inventory', 'https://api.ebay.com/oauth/api_scope/sell.account'])
+OAUTH_TOKEN = get_oauth_token_from_refresh_token([
+    'https://api.ebay.com/oauth/api_scope/sell.inventory',
+    'https://api.ebay.com/oauth/api_scope/sell.account'
+])
 
 BASE_URL = 'https://api.sandbox.ebay.com' if ENV == 'sandbox' else 'https://api.ebay.com'
 HEADERS = {
     'Authorization': f"Bearer {OAUTH_TOKEN}",
     'Content-Type': 'application/json',
-    'Content-Language': 'en-US' 
+    'Content-Language': 'en-US'
 }
+
+def safe_json(response):
+    try:
+        return response.json()
+    except ValueError:
+        return {}
+
+def print_api_response(action, response):
+    data = safe_json(response)
+    print(f"{action}: {response.status_code}", data or "(no JSON body)")
 
 def read_image_urls(csv_path):
     with open(csv_path, newline='') as f:
@@ -25,8 +39,11 @@ def read_description(html_path):
     with open(html_path, encoding='utf-8') as f:
         soup = BeautifulSoup(f, 'html.parser')
         body = soup.body
-        return ''.join(str(child) for child in body.children if child.name) if body else ''
-    
+        description = ''.join(str(child) for child in body.children if child.name) if body else ''
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        description = description + '<p><small>Generated: ' + timestamp + '</small></p>'
+        return description
+
 def read_title_from_html(html_path, max_length=80):
     with open(html_path, encoding='utf-8') as f:
         soup = BeautifulSoup(f, 'html.parser')
@@ -34,14 +51,13 @@ def read_title_from_html(html_path, max_length=80):
         if title_tag and title_tag.string:
             return title_tag.string.strip()[:max_length]
         return ''
-    
+
 def read_product_data(xlsx_path, product_id):
     df = pd.read_excel(xlsx_path, dtype={'id': str})
     row = df[df['id'] == product_id]
     if row.empty:
         raise ValueError(f"No entry for product_id {product_id} in pricing file.")
-    record = row.iloc[0]
-    return record
+    return row.iloc[0]
 
 def create_inventory_location(location_key):
     payload = {
@@ -51,15 +67,8 @@ def create_inventory_location(location_key):
         },
         'merchantLocationStatus': 'ENABLED'
     }
-
     r = requests.post(f"{BASE_URL}/sell/inventory/v1/location/{location_key}", headers=HEADERS, json=payload)
-
-    try:
-        response_json = r.json()
-    except ValueError:
-        response_json = '(no JSON body)'
-
-    print(f"Inventory location '{location_key}' created/updated successfully.")
+    print_api_response(f"Inventory location '{location_key}' create/update", r)
 
 def create_inventory_item(sku, title, image_urls, product_info):
     weight = product_info['lbs'] * 16 + product_info['oz']
@@ -89,7 +98,6 @@ def create_inventory_item(sku, title, image_urls, product_info):
             },
             'imageUrls': image_urls
         },
-        
         'packageWeightAndSize': {
             'dimensions': {
                 'length': str(int(product_info['l'])),
@@ -103,44 +111,34 @@ def create_inventory_item(sku, title, image_urls, product_info):
             }
         }
     }
-
     r = requests.put(f"{BASE_URL}/sell/inventory/v1/inventory_item/{sku}", headers=HEADERS, json=payload)
-
-    try:
-        response_json = r.json()
-    except ValueError:
-        response_json = '(no JSON body)'
-
-    print('Create Inventory Item:', r.status_code, response_json)
+    print_api_response('Create Inventory Item', r)
 
 def get_policy_id_by_name(policy_type, name):
     url = f"{BASE_URL}/sell/account/v1/{policy_type}_policy?marketplace_id=EBAY_US"
     r = requests.get(url, headers=HEADERS)
     if r.status_code != 200:
         raise Exception(f"Failed to fetch {policy_type} policies: {r.status_code} - {r.text}")
-    
-    policies = r.json().get(f"{policy_type}Policies", [])
+
+    policies = safe_json(r).get(f"{policy_type}Policies", [])
     for policy in policies:
         if policy['name'].lower() == name.lower():
             return policy[f"{policy_type}PolicyId"]
     raise ValueError(f"{policy_type.capitalize()} policy named '{name}' not found.")
 
 def create_or_update_offer(sku, description_html, product_info, inventory_location):
-    # First, check if an offer exists for this SKU
     get_url = f"{BASE_URL}/sell/inventory/v1/offer?sku={sku}"
     get_resp = requests.get(get_url, headers=HEADERS)
-
-    try:
-        get_json = get_resp.json()
-    except ValueError:
-        get_json = {}
-
-    offers = get_json.get('offers', [])
+    offers = safe_json(get_resp).get('offers', [])
     offer_exists = len(offers) > 0
 
-    FULFILLMENT_POLICY_ID = get_policy_id_by_name('fulfillment', 'standard shipping')
-    PAYMENT_POLICY_ID = get_policy_id_by_name('payment', 'standard payment')
-    RETURN_POLICY_ID = get_policy_id_by_name('return', 'standard return')
+    try:
+        FULFILLMENT_POLICY_ID = get_policy_id_by_name('fulfillment', 'standard shipping')
+        PAYMENT_POLICY_ID = get_policy_id_by_name('payment', 'standard payment')
+        RETURN_POLICY_ID = get_policy_id_by_name('return', 'standard return')
+    except ValueError as e:
+        print(f"❌ Policy lookup failed: {e}")
+        return
 
     payload = {
         'sku': sku,
@@ -174,13 +172,7 @@ def create_or_update_offer(sku, description_html, product_info, inventory_locati
         r = requests.post(create_url, headers=HEADERS, json=payload)
         action = 'Create'
 
-    try:
-        response_json = r.json()
-    except ValueError:
-        response_json = '(no JSON body)'
-
-    print(f"{action} Offer:", r.status_code, response_json)
-
+    print_api_response(f"{action} Offer", r)
 
 def main():
     if len(sys.argv) != 5:
@@ -193,12 +185,15 @@ def main():
     html_path = sys.argv[3]
     product_id = sys.argv[4]
 
+    for path in [xlsx_path, csv_path, html_path]:
+        if not os.path.exists(path):
+            sys.exit(f"❌ File not found: {path}")
+
     sku = f"DIECAST-{product_id}"
     product_info = read_product_data(xlsx_path, product_id)
     description_html = read_description(html_path)
     title = read_title_from_html(html_path)
     image_urls = read_image_urls(csv_path)
-
     inventory_location = 'WAREHOUSE'
 
     create_inventory_location(inventory_location)

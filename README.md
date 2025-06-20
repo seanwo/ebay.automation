@@ -1,18 +1,11 @@
 # 🏁 eBay Diecast Automation
 
-This repository automates the end-to-end process of creating eBay listings for diecast collectibles, including:
+Automates the end-to-end process of creating and managing eBay listings for diecast collectibles:
 
-- Pricing based on rarity and driver relevance
-- Generating formatted HTML descriptions from a template
-- Uploading and retrieving product images via AWS S3
-- Producing EPS-compatible bulk upload files
-- Using account-specific configuration for policy management
-
----
-
-# 🛠️ eBay Listing Automation: How-To Guide
-
-This guide walks through the complete workflow for managing eBay listings using Python scripts and shell tools.
+- Dynamic pricing based on inventory attributes
+- EPS photo URL generation and HTML description templating
+- Inventory creation, offer publishing, and listing management via eBay APIs
+- Uses refresh tokens and configurable business policies
 
 ---
 
@@ -22,90 +15,95 @@ This guide walks through the complete workflow for managing eBay listings using 
    ```bash
    python3 refresh.token.py generate
    ```
-   - Open the printed URL
-   - Sign in to eBay
-   - Copy the **authorization code**
 
-2. **Exchange the Code for a Refresh Token**
+2. **Exchange Authorization Code for Refresh Token**
    ```bash
    python3 refresh.token.py process <authorization_code>
    ```
-   - The resulting refresh token will be inserted into `ebay_config.py`
+   - Insert result into `ebay_config.py`
 
 ---
 
 ## 🧾 One-Time Setup
 
-### 1. **Enable Business Policies**
+### Enable and Create Business Policies
 ```bash
 python3 seller.policies.py enable
+python3 seller.policies.py create
 ```
 
-### 2. **Create Standard Policies**
-```bash
-python3 seller.policies.py write
-```
-
-### 3. **Verify the Created Policies**
+### Read/Verify Existing Policies
 ```bash
 python3 seller.policies.py read
 ```
 
 ---
 
-## 📸 As You Add Products
+## 📸 When Adding Products
 
-### 1. **Upload Product Photos to S3**
+### 1. Upload Photos to S3
 ```bash
-s3.upload.sh
-```
-- Place photos in `./photos/000/` where `000` is the SKU
-
-### 2. **Generate EPS-Compatible S3 URLs**
-```bash
-s3.get.urls.sh <category> <product_id>
+./s3.upload.sh
 ```
 
-### 3. **Generate or Update Pricing File**
+### 2. Generate S3 URLs (EPS-Compatible)
+```bash
+./s3.get.urls.sh <category> <product_id>
+```
+
+### 3. Generate Pricing File
 ```bash
 python3 diecast.pricing.py <input.xlsx> <output.xlsx>
 ```
-- Converts your full inventory into a pricing sheet for eBay
 
 ---
 
-## 📦 For Each eBay Listing
+## 🧱 Creating a New Listing
 
-### 1. **Create Product Description HTML**
+### 1. Generate Description HTML
 ```bash
 python3 diecast.listings.py <spreadsheet.xlsx> <template.html> <product_id>
 ```
 
-### 2. **Transfer S3 Product Photos to eBay EPS**
+### 2. Transfer Images to eBay EPS
 ```bash
 python3 eps.upload.py <s3-urls-file.txt> <category> <product_id>
 ```
 
-### 3. **Create Inventory Item and Offer (Unpublished)**
+### 3. Create Inventory and Offer (Unpublished)
 ```bash
 python3 sell.py <product.xlsx> <eps.csv> <description.html> <product_id>
 ```
 
-### 4. **Publish the Offer**
+### 4. Publish Offer
 ```bash
-# You’ll need to call the publish function manually or from within the script
+python3 manage.py publish <product_id>
 ```
 
 ---
 
-## 🧹 Maintenance Commands
+## 🧹 Listing Maintenance
 
-### End a Listing
+### End an Active Listing
 ```bash
-# Use the offerId to end it via API or dashboard
+python3 manage.py end <product_id>
 ```
 
-### Delete Offer and Inventory Item
+### Delete Offer and Inventory Item (Only if Not Active)
 ```bash
-# Use DELETE endpoints in the Inventory API or add script support
+python3 manage.py delete <product_id>
 ```
+
+### Check Listing Status
+```bash
+python3 manage.py status <product_id>
+```
+
+---
+
+## 🔧 Notes
+
+- All `sku` values are prefixed as `DIECAST-<product_id>`
+- Listings ended via Trading API will retain their listing ID but show as `status: UNPUBLISHED` in the Sell API
+- Deletion is blocked if the listing is still active; always end it first
+- All commands support both sandbox and production environments via `ebay_config.py`
