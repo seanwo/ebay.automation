@@ -72,7 +72,7 @@ python3 eps.upload.py <s3-urls-file.txt> <category> <product_id>
 
 ### 3. Create Inventory and Offer (Unpublished)
 ```bash
-python3 sell.py <product.xlsx> <eps.csv> <description.html> <product_id>
+python3 stock.py <product.xlsx> <eps.csv> <description.html> <product_id>
 ```
 
 ### 4. Publish Offer
