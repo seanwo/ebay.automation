@@ -70,7 +70,7 @@ def create_inventory_item(sku, title, image_urls, product_info):
                 'quantity': 1
             }
         },
-        'condition': 'USED_GOOD',
+        'condition': 'USED_EXCELLENT',
         'conditionDescription': 'In good condition. Displayed only in a glass case in a smoke-free home.',
         'product': {
             'title': title,
@@ -147,7 +147,7 @@ def create_or_update_offer(sku, description_html, product_info, inventory_locati
         'marketplaceId': 'EBAY_US',
         'format': 'FIXED_PRICE',
         'availableQuantity': 1,
-        'categoryId': '180273',
+        'categoryId': '180272',
         'listingDuration': 'GTC',
         'listingPolicies': {
             'fulfillmentPolicyId': FULFILLMENT_POLICY_ID,

@@ -114,11 +114,11 @@ def write_policies():
     # Return Policy
     return_payload = {
         "name": "standard return",
-        "description": "14-day return, buyer pays return shipping",
+        "description": "30-day return, buyer pays return shipping",
         "marketplaceId": "EBAY_US",
         "refundMethod": "MONEY_BACK",
         "returnsAccepted": True,
-        "returnPeriod": {"value": 14, "unit": "DAY"},
+        "returnPeriod": {"value": 30, "unit": "DAY"},
         "returnShippingCostPayer": "BUYER",
         "internationalOverride" : { 
             "returnsAccepted" : False
