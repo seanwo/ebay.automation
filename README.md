@@ -11,28 +11,28 @@ Automates the end-to-end process of creating and managing eBay listings for diec
 
 ## 🔁 Every 18 Months
 
-1. **Generate Authorization URL**
-   ```bash
-   python3 refresh.token.py generate
-   ```
+### 1. Generate Authorization URL
+```bash
+python3 refresh.token.py generate
+```
 
-2. **Exchange Authorization Code for Refresh Token**
-   ```bash
-   python3 refresh.token.py process <authorization_code>
-   ```
-   - Insert result into `ebay_config.py`
+### 2. Exchange Authorization Code for Refresh Token
+```bash
+python3 refresh.token.py process <authorization_code>
+```
+- Insert result into `ebay_config.py`
 
 ---
 
 ## 🧾 One-Time Setup
 
-### Enable and Create Business Policies
+### 1. Enable and Create Business Policies
 ```bash
 python3 seller.policies.py enable
 python3 seller.policies.py create
 ```
 
-### Read/Verify Existing Policies
+### 2. Read/Verify Existing Policies
 ```bash
 python3 seller.policies.py read
 ```
@@ -46,12 +46,7 @@ python3 seller.policies.py read
 ./s3.upload.sh
 ```
 
-### 2. Generate S3 URLs (EPS-Compatible)
-```bash
-./s3.get.urls.sh <category> <product_id>
-```
-
-### 3. Generate Pricing File
+### 2. Generate Pricing File
 ```bash
 python3 diecast.pricing.py <input.xlsx> <output.xlsx>
 ```
@@ -65,17 +60,22 @@ python3 diecast.pricing.py <input.xlsx> <output.xlsx>
 python3 diecast.listings.py <spreadsheet.xlsx> <template.html> <product_id>
 ```
 
-### 2. Transfer Images to eBay EPS
+### 2. Generate a List of S3 URLs
+```bash
+./s3.get.urls.sh <category> <product_id>
+```
+
+### 3. Transfer S3 Images to EPS
 ```bash
 python3 eps.upload.py <s3-urls-file.txt> <category> <product_id>
 ```
 
-### 3. Create Inventory and Offer (Unpublished)
+### 4. Create Inventory and Offer (Unpublished)
 ```bash
 python3 stock.py <product.xlsx> <eps.csv> <description.html> <product_id>
 ```
 
-### 4. Publish Offer
+### 5. Publish Offer
 ```bash
 python3 manage.py publish <product_id>
 ```
